@@ -1,4 +1,4 @@
-# powershell-scripts
+# Create-HyperV-VM
 
 PowerShell scripts for Windows administration.
 
@@ -7,13 +7,13 @@ PowerShell scripts for Windows administration.
 Run PowerShell as Administrator. Download `New-VM.ps1` to a temporary file and run it (recommended, keeps the `#Requires` checks):
 
 ```powershell
-$f = "$env:TEMP\New-VM.ps1"; try { irm "https://raw.githubusercontent.com/pavlobilan/powershell-scripts/main/New-VM.ps1" -OutFile $f -ErrorAction Stop; powershell -ExecutionPolicy Bypass -File $f } catch { $_ }
+$f = "$env:TEMP\New-VM.ps1"; try { irm "https://raw.githubusercontent.com/pavlobilan/Create-HyperV-VM/main/New-VM.ps1" -OutFile $f -ErrorAction Stop; powershell -ExecutionPolicy Bypass -File $f } catch { $_ }
 ```
 
 Or run without saving to disk:
 
 ```powershell
-irm "https://raw.githubusercontent.com/pavlobilan/powershell-scripts/main/New-VM.ps1" | iex
+irm "https://raw.githubusercontent.com/pavlobilan/Create-HyperV-VM/main/New-VM.ps1" | iex
 ```
 
 To always run a reviewed version, replace `main` with a commit hash.
