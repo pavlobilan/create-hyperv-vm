@@ -9,7 +9,8 @@
     - disks are dynamic: <VMName>.vhdx (system), <VMName>-Data.vhdx, <VMName>-Data2.vhdx, ...;
     - VM config: <RootPath>\<VMName>\Virtual Machines
     - disks:     <RootPath>\<VMName>\Virtual Hard Disks
-    - nested virtualization and MAC address spoofing (for a nested FreePBX VM);
+    - nested virtualization;
+    - MAC address spoofing on request (off by default; needed for bridged nested VMs);
     - guest OS is shut down (not saved) when the host shuts down;
     - VM does not start automatically when the host starts;
     - static MAC address.
@@ -51,6 +52,19 @@ function Read-Number {
         $n = 0
         if ([int]::TryParse($raw, [ref]$n) -and $n -ge $Min -and $n -le $Max) { return $n }
         Write-Host "  Enter a whole number from $Min to $Max." -ForegroundColor Yellow
+    }
+}
+
+# Yes/No prompt; Enter returns the default
+function Read-YesNo {
+    param([string]$Prompt, [bool]$Default = $false)
+    $hint = if ($Default) { 'Y/n' } else { 'y/N' }
+    while ($true) {
+        $raw = (Read-Host "$Prompt [$hint]").Trim().ToLower()
+        if (-not $raw) { return $Default }
+        if ($raw -in 'y', 'yes') { return $true }
+        if ($raw -in 'n', 'no')  { return $false }
+        Write-Host '  Enter y or n.' -ForegroundColor Yellow
     }
 }
 
@@ -118,6 +132,9 @@ try {
         }
     }
 
+    # --- MAC address spoofing (needed when nested VMs are bridged to the network) ---
+    $MacSpoofing = Read-YesNo 'Enable MAC address spoofing (for bridged nested VMs)?' $false
+
     # --- ISO image (optional) ---
     $IsoPath = (Read-Host 'Path to ISO (Enter = skip)').Trim().Trim('"')
     if ($IsoPath -and -not (Test-Path $IsoPath)) { throw "ISO '$IsoPath' not found." }
@@ -157,8 +174,8 @@ try {
     # Data disks
     $Disks | Select-Object -Skip 1 | ForEach-Object { Add-VMHardDiskDrive -VMName $VMName -Path $_.Path }
 
-    # Allow the VM to forward packets with foreign MAC addresses (network access for the nested FreePBX VM)
-    Set-VMNetworkAdapter -VMName $VMName -MacAddressSpoofing On
+    # Allow the VM to forward packets with foreign MAC addresses (only if requested)
+    Set-VMNetworkAdapter -VMName $VMName -MacAddressSpoofing $(if ($MacSpoofing) { 'On' } else { 'Off' })
 
     # Static MAC address in the Hyper-V range 00-15-5D, unique among VMs on this host
     $UsedMacs = @(Get-VM | Get-VMNetworkAdapter | ForEach-Object { $_.MacAddress })
@@ -188,6 +205,7 @@ try {
     Write-Host ("  Host start action: {0}" -f $vm.AutomaticStartAction)
     Write-Host ("  Host stop action:  {0}" -f $vm.AutomaticStopAction)
     Write-Host ("  MAC address:       {0} (static)" -f (($StaticMac -split '(..)' -ne '') -join '-'))
+    Write-Host ("  MAC spoofing:      {0}" -f (Get-VMNetworkAdapter -VMName $VMName).MacAddressSpoofing)
     Write-Host ("  Switch:            {0}" -f ($(if ($SwitchName) { $SwitchName } else { 'not connected' })))
     Get-VMHardDiskDrive -VMName $VMName | ForEach-Object {
         $v = Get-VHD -Path $_.Path
