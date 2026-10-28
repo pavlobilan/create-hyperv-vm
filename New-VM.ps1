@@ -4,7 +4,7 @@
 .SYNOPSIS
     Creates a Hyper-V Generation 2 VM for a nested virtualization host.
 .DESCRIPTION
-    - vCPU count asked interactively (default: all host logical processors), static memory, Secure Boot disabled;
+    - vCPU count asked interactively (default 4, or fewer if the host has fewer; up to the host's logical processors), static memory, Secure Boot disabled;
     - memory size, number of disks and their sizes are asked interactively;
     - disks are dynamic: <VMName>.vhdx (system), <VMName>-Data.vhdx, <VMName>-Data2.vhdx, ...;
     - VM config: <RootPath>\<VMName>\Virtual Machines
@@ -19,6 +19,7 @@
 $ErrorActionPreference = 'Stop'
 
 # --- VM settings ---
+$DefaultCpuCount = 4
 $DefaultMemoryGB = 8
 $DefaultDisks    = 2
 $DefaultSizesGB  = @(60, 200)   # defaults for disk 1, 2, ...
@@ -85,9 +86,9 @@ try {
         throw "Drive or share '$Qualifier' not found."
     }
 
-    # --- vCPU count (1 to the host's logical processors; default is the maximum) ---
+    # --- vCPU count (1 to the host's logical processors; default 4 or the host maximum if lower) ---
     $HostCpuCount = (Get-VMHost).LogicalProcessorCount
-    $CpuCount = Read-Number "vCPU count (host: $HostCpuCount)" $HostCpuCount 1 $HostCpuCount
+    $CpuCount = Read-Number "vCPU count (host: $HostCpuCount)" ([math]::Min($DefaultCpuCount, $HostCpuCount)) 1 $HostCpuCount
 
     $VMFolder = Join-Path $RootPath $VMName
     $DiskPath = Join-Path $VMFolder 'Virtual Hard Disks'
