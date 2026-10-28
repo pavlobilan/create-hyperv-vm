@@ -2,6 +2,22 @@
 
 PowerShell scripts for Windows administration.
 
+## Quick start
+
+Run PowerShell as Administrator. Download `New-VM.ps1` to a temporary file and run it (recommended, keeps the `#Requires` checks):
+
+```powershell
+$f = "$env:TEMP\New-VM.ps1"; irm "https://raw.githubusercontent.com/<USER>/powershell-scripts/main/New-VM.ps1" -OutFile $f; powershell -ExecutionPolicy Bypass -File $f
+```
+
+Or run without saving to disk:
+
+```powershell
+irm "https://raw.githubusercontent.com/<USER>/powershell-scripts/main/New-VM.ps1" | iex
+```
+
+Replace `<USER>` with the GitHub account name. To always run a reviewed version, replace `main` with a commit hash.
+
 ## New-VM.ps1
 
 Interactively creates a Generation 2 Hyper-V virtual machine prepared to act as a host for nested VMs.
@@ -36,22 +52,6 @@ The folder is asked at runtime; the default (`D:\HyperV`) is pre-filled and can 
 
 - Windows with the Hyper-V role and the Hyper-V PowerShell module
 - PowerShell run as Administrator
-
-### Run from GitHub
-
-Download to a temporary file and run it (recommended, keeps the `#Requires` checks):
-
-```powershell
-$f = "$env:TEMP\New-VM.ps1"; irm "https://raw.githubusercontent.com/<USER>/powershell-scripts/main/New-VM.ps1" -OutFile $f; powershell -ExecutionPolicy Bypass -File $f
-```
-
-Or run without saving to disk:
-
-```powershell
-irm "https://raw.githubusercontent.com/<USER>/powershell-scripts/main/New-VM.ps1" | iex
-```
-
-Replace `<USER>` with the GitHub account name. To always run a reviewed version, replace `main` with a commit hash.
 
 ### Defaults
 
