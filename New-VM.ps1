@@ -13,7 +13,8 @@
     - MAC address spoofing on request (off by default; needed for bridged nested VMs);
     - guest OS is shut down (not saved) when the host shuts down;
     - VM does not start automatically when the host starts;
-    - static MAC address.
+    - static MAC address;
+    - virtual TPM on request (on by default).
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -132,6 +133,9 @@ try {
     # --- MAC address spoofing (needed when nested VMs are bridged to the network) ---
     $MacSpoofing = Read-YesNo 'Enable MAC address spoofing (for bridged nested VMs)?' $false
 
+    # --- Virtual TPM ---
+    $EnableTpm = Read-YesNo 'Enable virtual TPM?' $true
+
     # --- ISO image (optional) ---
     $IsoPath = (Read-Host 'Path to ISO (Enter = skip)').Trim().Trim('"')
     if ($IsoPath -and -not (Test-Path $IsoPath)) { throw "ISO '$IsoPath' not found." }
@@ -181,6 +185,17 @@ try {
     } while ($UsedMacs -contains $StaticMac)
     Set-VMNetworkAdapter -VMName $VMName -StaticMacAddress $StaticMac
 
+    # Virtual TPM (needs a key protector; a local one is used on a host without Host Guardian Service)
+    $TpmWarning = $null
+    if ($EnableTpm) {
+        try {
+            Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
+            Enable-VMTPM -VMName $VMName
+        } catch {
+            $TpmWarning = "Virtual TPM was not enabled: $($_.Exception.Message)"
+        }
+    }
+
     # Disable Secure Boot
     Set-VMFirmware -VMName $VMName -EnableSecureBoot Off
 
@@ -199,6 +214,7 @@ try {
     Write-Host ("  vCPU:              {0}" -f (Get-VMProcessor -VMName $VMName).Count)
     Write-Host ("  Memory:            {0} GB (static)" -f ($vm.MemoryStartup / 1GB))
     Write-Host ("  Secure Boot:       {0}" -f (Get-VMFirmware -VMName $VMName).SecureBoot)
+    Write-Host ("  Virtual TPM:       {0}" -f $(if ((Get-VMSecurity -VMName $VMName).TpmEnabled) { 'On' } else { 'Off' }))
     Write-Host ("  Host start action: {0}" -f $vm.AutomaticStartAction)
     Write-Host ("  Host stop action:  {0}" -f $vm.AutomaticStopAction)
     Write-Host ("  MAC address:       {0} (static)" -f (($StaticMac -split '(..)' -ne '') -join '-'))
@@ -207,6 +223,10 @@ try {
     Get-VMHardDiskDrive -VMName $VMName | ForEach-Object {
         $v = Get-VHD -Path $_.Path
         Write-Host ("  Disk:              {0} ({1} GB, {2})" -f $v.Path, ($v.Size / 1GB), $v.VhdType)
+    }
+    if ($TpmWarning) {
+        Write-Host ''
+        Write-Host $TpmWarning -ForegroundColor Yellow
     }
 }
 catch {

@@ -28,6 +28,7 @@ Interactively creates a Generation 2 Hyper-V virtual machine prepared to act as 
 - Memory: static, size asked at runtime (default 8 GB, limited to host memory)
 - Disks: number and sizes asked at runtime (default 2 disks: 60 GB and 200 GB), all dynamic VHDX
 - Secure Boot: disabled
+- Virtual TPM: asked at runtime, on by default (uses a local key protector)
 - Nested virtualization: enabled
 - MAC address spoofing: asked at runtime, off by default (enable it when nested VMs are bridged to the network)
 - Static MAC address from the Hyper-V range `00-15-5D-xx-xx-xx`, unique among VMs on the host
