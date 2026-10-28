@@ -24,7 +24,7 @@ Interactively creates a Generation 2 Hyper-V virtual machine prepared to act as 
 
 ### What it configures
 
-- vCPU: 4 (reduced to the host's logical processor count if the host has fewer)
+- vCPU: asked at runtime, from 1 to the host's logical processor count (default: the maximum)
 - Memory: static, size asked at runtime (default 8 GB, limited to host memory)
 - Disks: number and sizes asked at runtime (default 2 disks: 60 GB and 200 GB), all dynamic VHDX
 - Secure Boot: disabled
@@ -59,7 +59,6 @@ Edit the variables at the top of the script to change defaults:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `$CpuCount` | `4` | vCPU count |
 | `$DefaultMemoryGB` | `8` | memory, GB |
 | `$DefaultDisks` | `2` | number of disks |
 | `$DefaultSizesGB` | `60, 200` | sizes of disk 1, 2, ..., GB |

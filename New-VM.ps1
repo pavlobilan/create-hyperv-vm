@@ -4,7 +4,7 @@
 .SYNOPSIS
     Creates a Hyper-V Generation 2 VM for a nested virtualization host.
 .DESCRIPTION
-    - 4 vCPU (or fewer if the host has fewer), static memory, Secure Boot disabled;
+    - vCPU count asked interactively (default: all host logical processors), static memory, Secure Boot disabled;
     - memory size, number of disks and their sizes are asked interactively;
     - disks are dynamic: <VMName>.vhdx (system), <VMName>-Data.vhdx, <VMName>-Data2.vhdx, ...;
     - VM config: <RootPath>\<VMName>\Virtual Machines
@@ -19,7 +19,6 @@
 $ErrorActionPreference = 'Stop'
 
 # --- VM settings ---
-$CpuCount        = 4
 $DefaultMemoryGB = 8
 $DefaultDisks    = 2
 $DefaultSizesGB  = @(60, 200)   # defaults for disk 1, 2, ...
@@ -69,13 +68,6 @@ function Read-YesNo {
 }
 
 try {
-    # --- vCPU count (limited to the host's logical processors) ---
-    $HostCpuCount = (Get-VMHost).LogicalProcessorCount
-    if ($HostCpuCount -lt $CpuCount) {
-        Write-Host ("Host has only {0} logical processor(s); vCPU count reduced from {1} to {0}." -f $HostCpuCount, $CpuCount) -ForegroundColor Yellow
-        $CpuCount = $HostCpuCount
-    }
-
     # --- VM name ---
     $VMName = (Read-Host 'VM name [VM01]').Trim()
     if ([string]::IsNullOrWhiteSpace($VMName)) { $VMName = 'VM01' }
@@ -92,6 +84,10 @@ try {
     if (-not (Test-Path -LiteralPath $Qualifier)) {
         throw "Drive or share '$Qualifier' not found."
     }
+
+    # --- vCPU count (1 to the host's logical processors; default is the maximum) ---
+    $HostCpuCount = (Get-VMHost).LogicalProcessorCount
+    $CpuCount = Read-Number "vCPU count (host: $HostCpuCount)" $HostCpuCount 1 $HostCpuCount
 
     $VMFolder = Join-Path $RootPath $VMName
     $DiskPath = Join-Path $VMFolder 'Virtual Hard Disks'
