@@ -7,16 +7,16 @@ PowerShell scripts for Windows administration.
 Run PowerShell as Administrator. Download `New-VM.ps1` to a temporary file and run it (recommended, keeps the `#Requires` checks):
 
 ```powershell
-$f = "$env:TEMP\New-VM.ps1"; irm "https://raw.githubusercontent.com/<USER>/powershell-scripts/main/New-VM.ps1" -OutFile $f; powershell -ExecutionPolicy Bypass -File $f
+$f = "$env:TEMP\New-VM.ps1"; try { irm "https://raw.githubusercontent.com/pavlobilan/powershell-scripts/main/New-VM.ps1" -OutFile $f -ErrorAction Stop; powershell -ExecutionPolicy Bypass -File $f } catch { $_ }
 ```
 
 Or run without saving to disk:
 
 ```powershell
-irm "https://raw.githubusercontent.com/<USER>/powershell-scripts/main/New-VM.ps1" | iex
+irm "https://raw.githubusercontent.com/pavlobilan/powershell-scripts/main/New-VM.ps1" | iex
 ```
 
-Replace `<USER>` with the GitHub account name. To always run a reviewed version, replace `main` with a commit hash.
+To always run a reviewed version, replace `main` with a commit hash.
 
 ## New-VM.ps1
 
