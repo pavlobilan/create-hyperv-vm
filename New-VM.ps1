@@ -69,6 +69,8 @@ function Read-YesNo {
     }
 }
 
+$ExitCode = 0
+
 try {
     # --- VM name ---
     $VMName = (Read-Host 'VM name [VM01]').Trim()
@@ -230,6 +232,7 @@ try {
     }
 }
 catch {
+    $ExitCode = 1
     Write-Host ''
     Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host 'VM was not created or was created only partially; check Hyper-V Manager.' -ForegroundColor Yellow
@@ -239,4 +242,6 @@ finally {
     # Read-Host always appends ': ' to its prompt, so the text is printed separately
     Write-Host 'Press Enter to exit...' -NoNewline
     Read-Host | Out-Null
+    # Close the PowerShell window (also when the script was run with irm | iex)
+    [Environment]::Exit($ExitCode)
 }

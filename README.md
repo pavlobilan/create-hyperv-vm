@@ -7,7 +7,7 @@ PowerShell scripts for Windows administration.
 Run PowerShell as Administrator. Download `New-VM.ps1` to a temporary file and run it (recommended, keeps the `#Requires` checks):
 
 ```powershell
-$f = "$env:TEMP\New-VM.ps1"; try { irm "https://raw.githubusercontent.com/pavlobilan/create-hyperv-vm/main/New-VM.ps1" -OutFile $f -ErrorAction Stop; powershell -ExecutionPolicy Bypass -File $f } catch { $_ }
+$f = "$env:TEMP\New-VM.ps1"; try { irm "https://raw.githubusercontent.com/pavlobilan/create-hyperv-vm/main/New-VM.ps1" -OutFile $f -ErrorAction Stop; powershell -ExecutionPolicy Bypass -File $f; exit } catch { $_ }
 ```
 
 Or run without saving to disk:
@@ -15,6 +15,8 @@ Or run without saving to disk:
 ```powershell
 irm "https://raw.githubusercontent.com/pavlobilan/create-hyperv-vm/main/New-VM.ps1" | iex
 ```
+
+After the final "Press Enter to exit..." the PowerShell window closes.
 
 To always run a reviewed version, replace `main` with a commit hash.
 
