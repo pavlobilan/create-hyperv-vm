@@ -32,7 +32,7 @@ Interactively creates a Generation 2 Hyper-V virtual machine prepared to act as 
 - Secure Boot: asked at runtime, off by default; when enabled, the template is chosen (Microsoft Windows or Microsoft UEFI CA for Linux)
 - Virtual TPM: asked at runtime, on by default (uses a local key protector); without it the Linux EFI stub prints a harmless "Failed to measure data" warning at boot
 - Nested virtualization: enabled
-- MAC address spoofing: asked at runtime, off by default (enable it when nested VMs are bridged to the network)
+- MAC address spoofing: asked at runtime, on by default (required for a KVM host so that its bridged VMs can reach the network)
 - Static MAC address from the Hyper-V range `00-15-5D-xx-xx-xx`, unique among VMs on the host
 - Automatic start action: Nothing
 - Automatic stop action: Shut down (the Shutdown integration service is enabled)

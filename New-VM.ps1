@@ -10,7 +10,7 @@
     - VM config: <RootPath>\<VMName>\Virtual Machines
     - disks:     <RootPath>\<VMName>\Virtual Hard Disks
     - nested virtualization;
-    - MAC address spoofing on request (off by default; needed for bridged nested VMs);
+    - MAC address spoofing on request (on by default; required for a KVM host so its bridged VMs reach the network);
     - guest OS is shut down (not saved) when the host shuts down;
     - VM does not start automatically when the host starts;
     - static MAC address;
@@ -136,8 +136,9 @@ try {
         }
     }
 
-    # --- MAC address spoofing (needed when nested VMs are bridged to the network) ---
-    $MacSpoofing = Read-YesNo 'Enable MAC address spoofing (for bridged nested VMs)?' $false
+    # --- MAC address spoofing (required for a KVM host: its bridged VMs use their own MAC addresses) ---
+    Write-Host 'Note: MAC address spoofing is required for a KVM host, so that its VMs can reach the network.' -ForegroundColor DarkGray
+    $MacSpoofing = Read-YesNo 'Enable MAC address spoofing?' $true
 
     # --- Secure Boot ---
     $SecureBoot = Read-YesNo 'Enable Secure Boot?' $false
