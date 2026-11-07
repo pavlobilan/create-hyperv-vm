@@ -29,8 +29,8 @@ Interactively creates a Generation 2 Hyper-V virtual machine prepared to act as 
 - vCPU: asked at runtime, from 1 to the host's logical processor count (default 4, or the host maximum if lower)
 - Memory: static, size asked at runtime (default 8 GB, limited to host memory)
 - Disks: number and sizes asked at runtime (default 2 disks: 60 GB and 200 GB), all dynamic VHDX
-- Secure Boot: disabled
-- Virtual TPM: always on (uses a local key protector); without it the Linux EFI stub prints "Failed to measure data" at boot
+- Secure Boot: asked at runtime, off by default; when enabled, the template is chosen (Microsoft Windows or Microsoft UEFI CA for Linux)
+- Virtual TPM: asked at runtime, off by default (uses a local key protector); without it the Linux EFI stub prints a harmless "Failed to measure data" warning at boot
 - Nested virtualization: enabled
 - MAC address spoofing: asked at runtime, off by default (enable it when nested VMs are bridged to the network)
 - Static MAC address from the Hyper-V range `00-15-5D-xx-xx-xx`, unique among VMs on the host

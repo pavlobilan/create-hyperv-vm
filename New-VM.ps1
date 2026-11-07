@@ -4,7 +4,7 @@
 .SYNOPSIS
     Creates a Hyper-V Generation 2 VM for a nested virtualization host.
 .DESCRIPTION
-    - vCPU count asked interactively (default 4, or fewer if the host has fewer; up to the host's logical processors), static memory, Secure Boot disabled;
+    - vCPU count asked interactively (default 4, or fewer if the host has fewer; up to the host's logical processors), static memory;
     - memory size, number of disks and their sizes are asked interactively;
     - disks are dynamic: <VMName>.vhdx (system), <VMName>-Data.vhdx, <VMName>-Data2.vhdx, ...;
     - VM config: <RootPath>\<VMName>\Virtual Machines
@@ -14,7 +14,8 @@
     - guest OS is shut down (not saved) when the host shuts down;
     - VM does not start automatically when the host starts;
     - static MAC address;
-    - virtual TPM always on (a Linux EFI stub warns at boot without it);
+    - Secure Boot on request (off by default; template chosen for Windows or Linux guests);
+    - virtual TPM on request (off by default; a Linux EFI stub prints a harmless warning at boot without it);
     - optional start of the VM at the end (default Yes), then the window closes.
 #>
 
@@ -138,6 +139,19 @@ try {
     # --- MAC address spoofing (needed when nested VMs are bridged to the network) ---
     $MacSpoofing = Read-YesNo 'Enable MAC address spoofing (for bridged nested VMs)?' $false
 
+    # --- Secure Boot ---
+    $SecureBoot = Read-YesNo 'Enable Secure Boot?' $false
+    $SecureBootTemplate = $null
+    if ($SecureBoot) {
+        Write-Host 'Secure Boot template:'
+        Write-Host '  [1] Microsoft Windows'
+        Write-Host '  [2] Microsoft UEFI Certificate Authority (Linux)'
+        $SecureBootTemplate = @('MicrosoftWindows', 'MicrosoftUEFICertificateAuthority')[(Read-Number 'Template number' 1 1 2) - 1]
+    }
+
+    # --- Virtual TPM ---
+    $EnableTpm = Read-YesNo 'Enable virtual TPM?' $false
+
     # --- ISO image (optional) ---
     $IsoPath = (Read-Host 'Path to ISO (Enter = skip)').Trim().Trim('"')
     if ($IsoPath -and -not (Test-Path $IsoPath)) { throw "ISO '$IsoPath' not found." }
@@ -189,15 +203,21 @@ try {
 
     # Virtual TPM (needs a key protector; a local one is used on a host without Host Guardian Service)
     $TpmWarning = $null
-    try {
-        Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
-        Enable-VMTPM -VMName $VMName
-    } catch {
-        $TpmWarning = "Virtual TPM was not enabled: $($_.Exception.Message)"
+    if ($EnableTpm) {
+        try {
+            Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
+            Enable-VMTPM -VMName $VMName
+        } catch {
+            $TpmWarning = "Virtual TPM was not enabled: $($_.Exception.Message)"
+        }
     }
 
-    # Disable Secure Boot
-    Set-VMFirmware -VMName $VMName -EnableSecureBoot Off
+    # Secure Boot (with the chosen template) or off
+    if ($SecureBoot) {
+        Set-VMFirmware -VMName $VMName -EnableSecureBoot On -SecureBootTemplate $SecureBootTemplate
+    } else {
+        Set-VMFirmware -VMName $VMName -EnableSecureBoot Off
+    }
 
     # Attach ISO and boot from it first
     if ($IsoPath) {
@@ -213,7 +233,8 @@ try {
     Write-Host ("  VM folder:         {0}" -f $vm.Path)
     Write-Host ("  vCPU:              {0}" -f (Get-VMProcessor -VMName $VMName).Count)
     Write-Host ("  Memory:            {0} GB (static)" -f ($vm.MemoryStartup / 1GB))
-    Write-Host ("  Secure Boot:       {0}" -f (Get-VMFirmware -VMName $VMName).SecureBoot)
+    $fw = Get-VMFirmware -VMName $VMName
+    Write-Host ("  Secure Boot:       {0}{1}" -f $fw.SecureBoot, $(if ($fw.SecureBoot -eq 'On') { " ($($fw.SecureBootTemplate))" } else { '' }))
     Write-Host ("  Virtual TPM:       {0}" -f $(if ((Get-VMSecurity -VMName $VMName).TpmEnabled) { 'On' } else { 'Off' }))
     Write-Host ("  Host start action: {0}" -f $vm.AutomaticStartAction)
     Write-Host ("  Host stop action:  {0}" -f $vm.AutomaticStopAction)
