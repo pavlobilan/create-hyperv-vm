@@ -14,7 +14,8 @@
     - guest OS is shut down (not saved) when the host shuts down;
     - VM does not start automatically when the host starts;
     - static MAC address;
-    - virtual TPM on request (on by default).
+    - virtual TPM on request (on by default);
+    - optional start of the VM at the end (default Yes), then the window closes.
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -70,6 +71,7 @@ function Read-YesNo {
 }
 
 $ExitCode = 0
+$AutoClose = $false   # set once the VM is created and the start question is answered
 
 try {
     # --- VM name ---
@@ -230,6 +232,28 @@ try {
         Write-Host ''
         Write-Host $TpmWarning -ForegroundColor Yellow
     }
+
+    # --- Start the VM (green prompt, default Yes) ---
+    Write-Host ''
+    do {
+        # Read-Host cannot color its prompt, so the question is printed separately
+        Write-Host "Start VM '$VMName' now? [Y/n]: " -ForegroundColor Green -NoNewline
+        $answer = (Read-Host).Trim().ToLower()
+    } until ($answer -in '', 'y', 'yes', 'n', 'no')
+
+    if ($answer -in '', 'y', 'yes') {
+        try {
+            Start-VM -Name $VMName
+            Write-Host "VM '$VMName' started."
+            $AutoClose = $true
+        } catch {
+            $ExitCode = 1
+            Write-Host "VM '$VMName' was created but could not be started: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "VM '$VMName' was not started."
+        $AutoClose = $true
+    }
 }
 catch {
     $ExitCode = 1
@@ -238,10 +262,16 @@ catch {
     Write-Host 'VM was not created or was created only partially; check Hyper-V Manager.' -ForegroundColor Yellow
 }
 finally {
-    Write-Host ''
-    # Read-Host always appends ': ' to its prompt, so the text is printed separately
-    Write-Host 'Press Enter to exit...' -NoNewline
-    Read-Host | Out-Null
+    if ($AutoClose) {
+        Write-Host 'This window will close in 3 seconds...'
+        Start-Sleep -Seconds 3
+    } else {
+        # Keep errors on screen until the user presses Enter
+        Write-Host ''
+        # Read-Host always appends ': ' to its prompt, so the text is printed separately
+        Write-Host 'Press Enter to exit...' -NoNewline
+        Read-Host | Out-Null
+    }
     # Close the PowerShell window (also when the script was run with irm | iex)
     [Environment]::Exit($ExitCode)
 }

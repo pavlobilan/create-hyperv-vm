@@ -16,7 +16,7 @@ Or run without saving to disk:
 irm "https://raw.githubusercontent.com/pavlobilan/create-hyperv-vm/main/New-VM.ps1" | iex
 ```
 
-After the final "Press Enter to exit..." the PowerShell window closes.
+At the end the script asks whether to start the VM (Enter = yes) and then closes the PowerShell window after 3 seconds. If an error occurs, it waits for Enter so the error can be read.
 
 To always run a reviewed version, replace `main` with a commit hash.
 
@@ -37,6 +37,7 @@ Interactively creates a Generation 2 Hyper-V virtual machine prepared to act as 
 - Automatic start action: Nothing
 - Automatic stop action: Shut down (the Shutdown integration service is enabled)
 - Optional ISO attached as the first boot device
+- Optional start of the VM after creation (default: yes)
 
 ### Folder layout
 
