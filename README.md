@@ -16,7 +16,7 @@ Or run without saving to disk:
 irm "https://raw.githubusercontent.com/pavlobilan/create-hyperv-vm/main/New-VM.ps1" | iex
 ```
 
-At the end the script asks whether to start the VM (Enter = yes) and then closes the PowerShell window after 3 seconds. If an error occurs, it waits for Enter so the error can be read.
+At the end the script asks whether to start the VM (Enter = yes) and then closes the PowerShell window after a countdown (3 seconds by default). If an error occurs, it waits for Enter so the error can be read.
 
 To always run a reviewed version, replace `main` with a commit hash.
 
@@ -69,6 +69,7 @@ Edit the variables at the top of the script to change defaults:
 | `$DefaultSizesGB` | `60, 200` | sizes of disk 1, 2, ..., GB |
 | `$ExtraDiskSizeGB` | `100` | size of further disks, GB |
 | `$DefaultRoot` | `D:\HyperV` | folder for virtual machines |
+| `$CloseDelaySec` | `3` | countdown before the window closes, seconds |
 
 ## License
 

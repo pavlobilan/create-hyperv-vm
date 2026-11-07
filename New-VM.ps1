@@ -29,6 +29,7 @@ $ExtraDiskSizeGB = 100          # default for disks beyond the list above
 $MaxDisks        = 16
 $MaxDiskSizeGB   = 65536        # VHDX limit is 64 TB
 $DefaultRoot     = 'D:\HyperV'
+$CloseDelaySec   = 3            # countdown before the window closes
 
 # Prompt with a pre-filled, editable default value (typed into the console input via SendKeys)
 function Read-HostPrefilled {
@@ -258,8 +259,13 @@ catch {
 }
 finally {
     if ($AutoClose) {
-        Write-Host 'This window will close in 3 seconds...'
-        Start-Sleep -Seconds 3
+        # Countdown on one line: the number of seconds is updated every second
+        for ($i = $CloseDelaySec; $i -gt 0; $i--) {
+            $unit = if ($i -eq 1) { 'second' } else { 'seconds' }
+            Write-Host ("`rThis window will close in {0} {1}...  " -f $i, $unit) -NoNewline
+            Start-Sleep -Seconds 1
+        }
+        Write-Host ''
     } else {
         # Keep errors on screen until the user presses Enter
         Write-Host ''
