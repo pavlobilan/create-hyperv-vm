@@ -44,7 +44,6 @@ function Read-HostPrefilled {
         $value = Read-Host "$Prompt [$Default]"
     }
     if ([string]::IsNullOrWhiteSpace($value)) { $value = $Default }
-    Write-Host ''   # blank line after each answer
     $value
 }
 
@@ -53,9 +52,9 @@ function Read-Number {
     param([string]$Prompt, [int]$Default, [int]$Min, [int]$Max)
     while ($true) {
         $raw = (Read-Host "$Prompt [$Default]").Trim()
-        if (-not $raw) { Write-Host ''; return $Default }
+        if (-not $raw) { return $Default }
         $n = 0
-        if ([int]::TryParse($raw, [ref]$n) -and $n -ge $Min -and $n -le $Max) { Write-Host ''; return $n }
+        if ([int]::TryParse($raw, [ref]$n) -and $n -ge $Min -and $n -le $Max) { return $n }
         Write-Host "  Enter a whole number from $Min to $Max." -ForegroundColor Yellow
     }
 }
@@ -66,9 +65,9 @@ function Read-YesNo {
     $hint = if ($Default) { 'Y/n' } else { 'y/N' }
     while ($true) {
         $raw = (Read-Host "$Prompt [$hint]").Trim().ToLower()
-        if (-not $raw) { Write-Host ''; return $Default }
-        if ($raw -in 'y', 'yes') { Write-Host ''; return $true }
-        if ($raw -in 'n', 'no')  { Write-Host ''; return $false }
+        if (-not $raw) { return $Default }
+        if ($raw -in 'y', 'yes') { return $true }
+        if ($raw -in 'n', 'no')  { return $false }
         Write-Host '  Enter y or n.' -ForegroundColor Yellow
     }
 }
@@ -79,7 +78,6 @@ $AutoClose = $false   # set once the VM is created and the start question is ans
 try {
     # --- VM name ---
     $VMName = (Read-Host 'VM name [VM01]').Trim()
-    Write-Host ''
     if ([string]::IsNullOrWhiteSpace($VMName)) { $VMName = 'VM01' }
     if (Get-VM -Name $VMName -ErrorAction SilentlyContinue) {
         throw "VM '$VMName' already exists."
@@ -131,7 +129,6 @@ try {
             Write-Host ("  [{0}] {1} ({2})" -f ($i + 1), $Switches[$i].Name, $Switches[$i].SwitchType)
         }
         $choice = (Read-Host 'Switch number (Enter = do not connect)').Trim()
-        Write-Host ''
         if ($choice) {
             $idx = [int]$choice - 1
             if ($idx -lt 0 -or $idx -ge $Switches.Count) { throw 'Invalid switch number.' }
@@ -157,7 +154,6 @@ try {
 
     # --- ISO image (optional) ---
     $IsoPath = (Read-Host 'Path to ISO (Enter = skip)').Trim().Trim('"')
-    Write-Host ''
     if ($IsoPath -and -not (Test-Path $IsoPath)) { throw "ISO '$IsoPath' not found." }
 
     # --- Create disks ---
@@ -231,6 +227,7 @@ try {
 
     # --- Summary ---
     $vm = Get-VM -Name $VMName
+    Write-Host ''
     Write-Host "VM '$VMName' created." -ForegroundColor Green
     Write-Host ''
     Write-Host ("  VM folder:         {0}" -f $vm.Path)
@@ -260,7 +257,6 @@ try {
         Write-Host "Start VM '$VMName' now? [Y/n]: " -ForegroundColor Green -NoNewline
         $answer = (Read-Host).Trim().ToLower()
     } until ($answer -in '', 'y', 'yes', 'n', 'no')
-    Write-Host ''
 
     if ($answer -in '', 'y', 'yes') {
         try {
