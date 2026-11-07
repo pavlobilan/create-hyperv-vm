@@ -14,7 +14,7 @@
     - guest OS is shut down (not saved) when the host shuts down;
     - VM does not start automatically when the host starts;
     - static MAC address;
-    - virtual TPM on request (on by default);
+    - virtual TPM always on (a Linux EFI stub warns at boot without it);
     - optional start of the VM at the end (default Yes), then the window closes.
 #>
 
@@ -137,9 +137,6 @@ try {
     # --- MAC address spoofing (needed when nested VMs are bridged to the network) ---
     $MacSpoofing = Read-YesNo 'Enable MAC address spoofing (for bridged nested VMs)?' $false
 
-    # --- Virtual TPM ---
-    $EnableTpm = Read-YesNo 'Enable virtual TPM?' $true
-
     # --- ISO image (optional) ---
     $IsoPath = (Read-Host 'Path to ISO (Enter = skip)').Trim().Trim('"')
     if ($IsoPath -and -not (Test-Path $IsoPath)) { throw "ISO '$IsoPath' not found." }
@@ -191,13 +188,11 @@ try {
 
     # Virtual TPM (needs a key protector; a local one is used on a host without Host Guardian Service)
     $TpmWarning = $null
-    if ($EnableTpm) {
-        try {
-            Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
-            Enable-VMTPM -VMName $VMName
-        } catch {
-            $TpmWarning = "Virtual TPM was not enabled: $($_.Exception.Message)"
-        }
+    try {
+        Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
+        Enable-VMTPM -VMName $VMName
+    } catch {
+        $TpmWarning = "Virtual TPM was not enabled: $($_.Exception.Message)"
     }
 
     # Disable Secure Boot
