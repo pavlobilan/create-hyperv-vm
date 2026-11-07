@@ -15,7 +15,7 @@
     - VM does not start automatically when the host starts;
     - static MAC address;
     - Secure Boot on request (off by default; template chosen for Windows or Linux guests);
-    - virtual TPM on request (off by default; a Linux EFI stub prints a harmless warning at boot without it);
+    - virtual TPM on request (on by default; a Linux EFI stub prints a harmless warning at boot without it);
     - optional start of the VM at the end (default Yes), then the window closes.
 #>
 
@@ -150,7 +150,7 @@ try {
     }
 
     # --- Virtual TPM ---
-    $EnableTpm = Read-YesNo 'Enable virtual TPM?' $false
+    $EnableTpm = Read-YesNo 'Enable virtual TPM?' $true
 
     # --- ISO image (optional) ---
     $IsoPath = (Read-Host 'Path to ISO (Enter = skip)').Trim().Trim('"')
