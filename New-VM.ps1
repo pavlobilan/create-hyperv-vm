@@ -164,9 +164,12 @@ try {
     # --- Virtual TPM ---
     $EnableTpm = Read-YesNo 'Enable virtual TPM?' $false
 
-    # --- ISO image (optional) ---
-    $IsoPath = (Read-Host 'Path to ISO (Enter = skip)').Trim().Trim('"')
-    if ($IsoPath -and -not (Test-Path $IsoPath)) { throw "ISO '$IsoPath' not found." }
+    # --- ISO image (optional; repeats until the file exists or Enter is pressed) ---
+    while ($true) {
+        $IsoPath = (Read-Host 'Path to ISO (Enter = skip)').Trim().Trim('"')
+        if (-not $IsoPath -or (Test-Path -LiteralPath $IsoPath -PathType Leaf)) { break }
+        Write-Host "  File '$IsoPath' not found. Enter another path or press Enter to skip." -ForegroundColor Yellow
+    }
 
     # --- Create disks ---
     New-Item -ItemType Directory -Path $DiskPath -Force | Out-Null
