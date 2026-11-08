@@ -29,7 +29,7 @@ $DefaultSizesGB  = @(60, 200)   # defaults for disk 1, 2, ...
 $ExtraDiskSizeGB = 100          # default for disks beyond the list above
 $MaxDisks        = 16
 $MaxDiskSizeGB   = 65536        # VHDX limit is 64 TB
-$DefaultRoot     = 'D:\HyperV'
+$DefaultRoot     = 'I:\HyperV'
 $CloseDelaySec   = 3            # countdown before the window closes
 
 # Prompt with a pre-filled, editable default value (typed into the console input via SendKeys)
@@ -84,22 +84,33 @@ try {
     }
 
     # --- Folder where VMs are stored (a <VMName> subfolder is created in it) ---
-    $RootPath = (Read-HostPrefilled 'Folder for virtual machines' $DefaultRoot).Trim().Trim('"').TrimEnd('\')
-    if (-not [System.IO.Path]::IsPathRooted($RootPath)) {
-        throw 'Specify a full path, e.g. D:\HyperV'
-    }
-    $Qualifier = [System.IO.Path]::GetPathRoot($RootPath)
-    if (-not (Test-Path -LiteralPath $Qualifier)) {
-        throw "Drive or share '$Qualifier' not found."
+    # Repeats until the path is valid and has no <VMName> subfolder yet; the last entry is pre-filled again
+    $PathPrompt = $DefaultRoot
+    while ($true) {
+        $RootPath = (Read-HostPrefilled 'Folder for virtual machines' $PathPrompt).Trim().Trim('"').TrimEnd('\')
+        $PathPrompt = $RootPath
+        if (-not [System.IO.Path]::IsPathRooted($RootPath)) {
+            Write-Host "  Specify a full path, e.g. $DefaultRoot" -ForegroundColor Yellow
+            continue
+        }
+        $Qualifier = [System.IO.Path]::GetPathRoot($RootPath)
+        if (-not (Test-Path -LiteralPath $Qualifier)) {
+            Write-Host "  Drive or share '$Qualifier' not found. Choose another folder." -ForegroundColor Yellow
+            continue
+        }
+        $VMFolder = Join-Path $RootPath $VMName
+        if (Test-Path -LiteralPath $VMFolder) {
+            Write-Host "  Folder '$VMFolder' already exists. Choose another folder." -ForegroundColor Yellow
+            continue
+        }
+        break
     }
 
     # --- vCPU count (1 to the host's logical processors; default 4 or the host maximum if lower) ---
     $HostCpuCount = (Get-VMHost).LogicalProcessorCount
     $CpuCount = Read-Number "vCPU count (host: $HostCpuCount)" ([math]::Min($DefaultCpuCount, $HostCpuCount)) 1 $HostCpuCount
 
-    $VMFolder = Join-Path $RootPath $VMName
     $DiskPath = Join-Path $VMFolder 'Virtual Hard Disks'
-    if (Test-Path -LiteralPath $VMFolder) { throw "Folder '$VMFolder' already exists." }
 
     # --- Memory (static, limited to the host's physical memory) ---
     $HostMemGB = [math]::Floor((Get-VMHost).MemoryCapacity / 1GB)

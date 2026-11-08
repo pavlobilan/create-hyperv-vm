@@ -50,7 +50,7 @@ Interactively creates a Generation 2 Hyper-V virtual machine prepared to act as 
     └── <VMName>-Data2.vhdx ...
 ```
 
-The folder is asked at runtime; the default (`D:\HyperV`) is pre-filled and can be edited.
+The folder is asked at runtime; the default (`I:\HyperV`) is pre-filled and can be edited. If the folder already contains a subfolder with the VM name, the script asks for another folder.
 
 ### Requirements
 
@@ -68,7 +68,7 @@ Edit the variables at the top of the script to change defaults:
 | `$DefaultDisks` | `2` | number of disks |
 | `$DefaultSizesGB` | `60, 200` | sizes of disk 1, 2, ..., GB |
 | `$ExtraDiskSizeGB` | `100` | size of further disks, GB |
-| `$DefaultRoot` | `D:\HyperV` | folder for virtual machines |
+| `$DefaultRoot` | `I:\HyperV` | folder for virtual machines |
 | `$CloseDelaySec` | `3` | countdown before the window closes, seconds |
 
 ## License
